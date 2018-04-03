@@ -21,8 +21,8 @@
  *
  * Maintains a set of file descriptors that can be polled for events,
  * using the POSIX epoll(4) API. Because of this, file descriptor
- * events can be either edge or level triggered; see \ref poll() for
- * details
+ * events can be either edge or level triggered; see see the epoll(4)
+ * man page details
  *
  **********************************************************************
  */

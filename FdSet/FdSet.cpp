@@ -116,8 +116,7 @@ FdSet& FdSet::operator=(FdSet&& rhs)
 }
 
 /**
- * Add a new file descriptor to monitor for events. Note that this
- * will transfer ownership of \a fd
+ * Adds a new file descriptor to monitor for events
  *
  * @param[in] fd     The file descriptor
  * @param[in] events The events to monitor the file descriptor for
