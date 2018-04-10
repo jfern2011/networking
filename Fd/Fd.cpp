@@ -15,9 +15,11 @@
 #include "abort.h"
 #include "Fd.h"
 
+#ifndef DOXYGEN_SKIP
 _static_assert_cpp11_( STDIN_FILENO == 0);
 _static_assert_cpp11_(STDOUT_FILENO == 1);
 _static_assert_cpp11_(STDERR_FILENO == 2);
+#endif
 
 /**
  * Default constructor

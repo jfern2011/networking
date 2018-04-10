@@ -9,7 +9,9 @@
 #ifndef __FILE_DESCRIPTOR_H__
 #define __FILE_DESCRIPTOR_H__
 
+#ifndef DOXYGEN_SKIP
 #define _static_assert_cpp11_(a) static_assert(a, #a);
+#endif
 
 /**
  * @class Fd
