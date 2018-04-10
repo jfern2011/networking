@@ -38,6 +38,10 @@ public:
 
 	explicit operator bool() const;
 
+	bool can_read (int timeout=-1) const;
+
+	bool can_write(int timeout=-1) const;
+
 	int get() const;
 
 	bool is_blocking() const;
@@ -49,6 +53,11 @@ public:
 	bool set_blocking(bool val);
 
 	void swap(Fd& fd);
+
+private:
+
+	bool _poll(short ev, int timeout,
+		bool& ready) const;
 
 protected:
 

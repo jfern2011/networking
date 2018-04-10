@@ -191,7 +191,7 @@ bool FdSet::poll(int timeout)
 		if ((events[i].events & EPOLLOUT)
 				&& write_sig.is_connected())
 		{
-			AbortIfNot( write_sig.raise(info.fd),
+			AbortIfNot(write_sig.raise(info.fd),
 				false);
 		}
  

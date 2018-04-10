@@ -7,6 +7,7 @@
  */
 
 #include <fcntl.h>
+#include <poll.h>
 #include <utility>
 
 #include <unistd.h>
@@ -85,6 +86,38 @@ Fd& Fd::operator=(Fd&& rhs)
 Fd::operator bool() const
 {
 	return 0 <= _fd;
+}
+
+/**
+ * Check if data is available for reading on the file descriptor
+ *
+ * @param[in]  timeout Wait at most this many milliseconds
+ *                     for the file to become readable.
+ *                     Specifying -1 may block indefinitely
+ *
+ * @return True if reading would not block
+ */
+bool Fd::can_read(int timeout) const
+{
+	bool ready = false;
+	AbortIfNot(_poll(POLLIN, timeout, ready), false);
+	return ready;
+}
+
+/**
+ * Check if space is available for writing on the file descriptor
+ *
+ * @param[in] timeout Wait at most this many milliseconds
+ *                    for the file to become writable.
+ *                    Specifying -1 may block indefinitely
+ *
+ * @return True if writing would not block
+ */
+bool Fd::can_write(int timeout) const
+{
+	bool ready =  false;
+	AbortIfNot(_poll(POLLOUT, timeout, ready), false);
+	return ready;
 }
 
 /**
@@ -181,4 +214,35 @@ void Fd::swap(Fd& fd)
 
 	_fd    = fd._fd;
 	fd._fd = temp;
+}
+
+/**
+ * Polls the file descriptor for the specified event
+ *
+ * @param[in]  ev      The event to poll for
+ * @param[in]  timeout The number of milliseconds to wait for
+ *                     an I/O notification
+ * @param[out] ready   True if the event occured
+ *
+ * @return True on success
+ */
+bool Fd::_poll(short ev, int timeout, bool& ready) const
+{
+	ready = false;
+
+	if (*this)
+	{
+		struct pollfd pfd; pfd.events = ev;
+		pfd.fd = _fd;
+
+		const int res = ::poll(&pfd, 1, timeout);
+		AbortIf(res < 0, false);
+		if (res > 0)
+		{
+			AbortIfNot(pfd.revents == ev, false);
+			ready = true;
+		}
+	}
+
+	return true;
 }
