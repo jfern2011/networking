@@ -12,6 +12,7 @@
 #include "SharedFd.h"
 #include "Signal.h"
 
+#include <sys/epoll.h>
 #include <vector>
 
 /**
@@ -22,12 +23,18 @@
  * Maintains a set of file descriptors that can be polled for events,
  * using the POSIX epoll(4) API. Because of this, file descriptor
  * events can be either edge or level triggered; see the epoll(4) man
- * page details
+ * page for details
  *
  **********************************************************************
  */
 class FdSet
 {
+	/**
+	 * File descriptor events considered "exceptional"
+	 */
+	static const int except_cond =
+		 EPOLLRDHUP | EPOLLPRI | EPOLLERR | EPOLLHUP;
+
 	/**
 	 * Maintains the information of a single registered
 	 * file descriptor
@@ -61,9 +68,14 @@ public:
 
 	FdSet& operator=(FdSet&& rhs);
 
-	bool push_back(SharedFd fd, short events);
-
 	bool poll(int timeout = -1);
+
+	bool poll_read( int timeout = -1);
+
+	bool poll_write(int timeout = -1);
+
+	bool push_back(SharedFd fd,
+		short events);
 
 	/**
 	 * A signal that gets raised whenever some event occurs on
@@ -93,10 +105,17 @@ public:
 
 private:
 
+	bool _poll(int timeout, short ev);
+
 	/**
 	 * The return value of ::epoll_create()
 	 */
 	int _epfd;
+
+	/**
+	 * The returned file descriptor events
+	 */
+	struct epoll_event events[FD_SETSIZE];
 
 	/**
 	 * The file descriptors being monitored

@@ -9,7 +9,6 @@
 #include "abort.h"
 #include "FdSet.h"
 
-#include <sys/epoll.h>
 #include <unistd.h>
 #include <utility>
 
@@ -116,6 +115,52 @@ FdSet& FdSet::operator=(FdSet&& rhs)
 }
 
 /**
+ *  Poll for the file descriptor set for events. This will dispatch
+ *  callbacks to handle each event
+ *
+ * @param[in] timeout Block for at least this many milliseconds. If
+ *                    negative, block indefinitely
+ *
+ * @return True on success
+ */
+bool FdSet::poll(int timeout)
+{
+	AbortIfNot(_poll(timeout, EPOLLIN | EPOLLOUT), false);
+
+	return true;
+}
+
+/**
+ * Poll for read events, dispatching the handler for each
+ *
+ * @param[in] timeout Block for at least this many milliseconds. If
+ *                    negative, block indefinitely
+ *
+ * @return True on success
+ */
+bool FdSet::poll_read(int timeout)
+{
+	AbortIfNot(_poll(timeout, EPOLLIN), false);
+
+	return true;
+}
+
+/**
+ * Poll for write events, dispatching the handler for each
+ *
+ * @param[in] timeout Block for at least this many milliseconds. If
+ *                    negative, block indefinitely
+ *
+ * @return True on success
+ */
+bool FdSet::poll_write(int timeout)
+{
+	AbortIfNot(_poll(timeout, EPOLLOUT), false);
+
+	return true;
+}
+
+/**
  * Adds a new file descriptor to monitor for events
  *
  * @param[in] fd     The file descriptor
@@ -148,27 +193,21 @@ bool FdSet::push_back(SharedFd fd, short events)
 }
 
 /**
- *  Poll for the file descriptor set for events. This will dispatch
- *  callbacks to handle events
+ * Poll all file descriptors for events
  *
  * @param[in] timeout Block for at least this many milliseconds. If
  *                    negative, block indefinitely
+ * @param[in] ev      Which events to poll for. Note that we always
+ *                    check for exceptions
  *
  * @return True on success
  */
-bool FdSet::poll(int timeout)
+bool FdSet::_poll(int timeout, short ev)
 {
-	struct epoll_event events[FD_SETSIZE];
-
 	AbortIf(_epfd < 0, false);
 
 	int n_ready = ::epoll_wait(_epfd, events, _fds.size(), timeout);
 	AbortIf(n_ready < 0, false);
-
-	const int except_cond = EPOLLRDHUP |
-							EPOLLPRI   |
-							EPOLLERR   | 
-							EPOLLHUP;
 
 	for (int i = 0; i < n_ready; i++)
 	{
@@ -181,20 +220,19 @@ bool FdSet::poll(int timeout)
 				false);
 		}
 
-		if ((events[i].events & EPOLLIN)
+		if ((events[i].events & EPOLLIN & ev)
 				&& read_sig.is_connected())
 		{
 			AbortIfNot(read_sig.raise(info.fd),
 				false);
 		}
 
-		if ((events[i].events & EPOLLOUT)
+		if ((events[i].events & EPOLLOUT & ev)
 				&& write_sig.is_connected())
 		{
 			AbortIfNot(write_sig.raise(info.fd),
 				false);
 		}
- 
 	}
 
 	return true;

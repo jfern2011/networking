@@ -1,18 +1,133 @@
+/**
+ *  \file   UdpConnection.cpp
+ *  \author Jason Fernandez
+ *  \date   4/11/2018
+ *
+ *  https://github.com/jfern2011/io_tools
+ */
+
 #include <cstring>
 #include <netdb.h>
+#include <sys/ioctl.h>
 #include <unistd.h>
 
-#include "UdpConnection.h"
 #include "abort.h"
+#include "UdpConnection.h"
+#include "net.h"
 
 namespace net
 {
 	/**
+	 * Default constructor
+	 */
+	DataBuffer::DataBuffer() : _buf(nullptr), _size(0)
+	{
+	}
+
+	/**
+	 * Constructor
+	 *
+	 * @param [in] buf    The raw buffer
+	 * @param [in] size   The size of the given buffer, in bytes
+	 */
+	DataBuffer::DataBuffer(char* buf, size_t size)
+		: _buf(buf), _size(size)
+	{
+	}
+
+	/**
+	 * Destructor
+	 */
+	DataBuffer::~DataBuffer()
+	{
+	}
+
+	/**
+	 * C++ boolean type conversion. Returns true if the internal
+	 * buffer is valid (non-null)
+	 *
+	 * @return True if we're holding a valid buffer
+	 */
+	DataBuffer::operator bool() const
+	{
+		return _buf != nullptr;
+	}
+
+	/**
+	 * Clear the buffer. Nulls the internal pointer and sets the
+	 * size to zero; equivalent to \ref reset(0,0)
+	 */
+	void DataBuffer::clear()
+	{
+		_buf = nullptr; _size = 0;
+	}
+
+	/**
+	 * Get the buffer currently being handled
+	 *
+	 * @return The internal buffer
+	 */
+	char* DataBuffer::get()
+	{
+		return _buf;
+	}
+
+	/**
+	 * Get the buffer currently being handled
+	 *
+	 * @return The internal buffer
+	 */
+	const char* DataBuffer::get() const
+	{
+		return _buf;
+	}
+
+	/**
+	 * Indexing operator
+	 *
+	 * @param[in] index Get the byte at this index
+	 *
+	 * @return The byte at index \a index, or 0xFF if the desired
+	 *         index is out of range
+	 */
+	char DataBuffer::operator[](size_t index) const
+	{
+		AbortIfNot(index < _size, 0xFF);
+		AbortIfNot(_buf, false);
+
+		return _buf[index];
+	}
+
+	/**
+	 * Handle a new buffer
+	 *
+	 * @param [in] buf    The raw buffer
+	 * @param [in] size   The size of the given buffer, in bytes
+	 */
+	void DataBuffer::reset(char* buf, size_t size)
+	{
+		_buf = buf; _size = size;
+	}
+
+	/**
+	 * Get the size of the buffer, in bytes
+	 *
+	 * @return The buffer size
+	 */
+	size_t DataBuffer::size() const
+	{
+		return _size;
+	}
+
+	/**
 	 * Constructor
 	 */
 	UdpConnection::UdpConnection()
-		: _fd(::socket(AF_INET, SOCK_DGRAM, 0)), _is_connected(false),
-		  _is_init(_fd)
+		: _data(nullptr, 0), _fd(::socket(AF_INET, SOCK_DGRAM, 0)),
+		  _is_connected(false),
+		  _is_init(_fd),
+		  _raw(nullptr),
+		  _size(0)
 	{
 	}
 
@@ -21,6 +136,7 @@ namespace net
 	 */
 	UdpConnection::~UdpConnection()
 	{
+		if (_raw) delete[] _raw;
 	}
 
 	/**
@@ -75,30 +191,48 @@ namespace net
 	/**
 	 * Receive data from a remote node
 	 *
-	 * @param[in] buf     The buffer to write the received data into
-	 * @param[in] size    Read at most this many bytes
-	 * @param[in] timeout The timeout (in milliseconds) after which
-	 *                    this call will return, even if no data was
-	 *                    available for reading. Specifying -1 may
-	 *                    block indefinitely
+	 * @param[out] buf     Place remote data here
+	 * @param[in]  timeout The timeout (in milliseconds) after which
+	 *                     this call will return, even if no data is
+	 *                     available for reading. Specifying -1 may
+	 *                     block indefinitely
+	 * @param[in]  conn    If true, connect to the node that sent the
+	 *                     data. Future calls to \ref send() will
+	 *                     send to this node
 	 *
-	 * @return The number of bytes received, or -1 on error
+	 * @return True on success
 	 */
-	int UdpConnection::recv(char* buf, int size, int timeout) const
+	bool UdpConnection::recv(DataBuffer& buf, int timeout, bool conn)
 	{
-		AbortIfNot(_is_init, -1);
-
-		if (!_fd.can_read(timeout)) return 0;
+		AbortIfNot(_is_init, false);
 
 		struct sockaddr_in s_addr;
+			socklen_t addrlen = sizeof(_remote_addr);
 
-		socklen_t addrlen = sizeof(s_addr);
-		int nbytes =
-			::recvfrom(_fd.get(), buf, size, 0, to_sockaddr(&s_addr),
-				&addrlen);
+		if (!_fd.can_read(timeout))
+		{
+			buf.clear(); return true;
+		}
 
-		AbortIf(nbytes < 0, -1);
-		return nbytes;
+		AbortIfNot(_handle_input(), false);
+
+		int nbytes = ::recvfrom(_fd.get(), _data.get(), _data.size(),
+			0, to_sockaddr(&s_addr), &addrlen);
+
+		AbortIf(nbytes < 0, false);
+		buf = _data;
+
+		if (conn)
+		{
+			std::memcpy(&_remote_addr, &s_addr,
+				addrlen);
+			AbortIf( ::connect(_fd.get(), to_sockaddr(&_remote_addr),
+				addrlen) < 0, false);
+
+			_is_connected = true;
+		}
+
+		return true;
 	}
 
 	/**
@@ -112,20 +246,45 @@ namespace net
 	 *
 	 * @return The number of bytes written, or -1 on error
 	 */
-	int UdpConnection::send(const char* buf, int size, int timeout)
-		const
+	int UdpConnection::send(const DataBuffer& buf, int timeout) const
 	{
 		AbortIfNot(_is_init, -1);
+		AbortIfNot(buf, -1);
 		AbortIfNot(_is_connected, -1,
-					"send() is only allowed on connected sockets.");
+				"send() is only allowed on connected sockets.");
 
 		if (!_fd.can_write(timeout))
 			return 0;
 
-		int nbytes = ::write(_fd.get(), buf, size);
-		AbortIf(nbytes < 0, -1);
+		int nbytes  = ::write(_fd.get(), buf.get(), buf.size());
+		AbortIf(nbytes < 0, false);
 
 		return nbytes;
+	}
+
+	/**
+	 * Handle an input message from a remote node. This preps
+	 * the data buffer for reading
+	 *
+	 * @return True on success
+	 */
+	bool UdpConnection::_handle_input()
+	{
+		int fsize;
+		AbortIf(::ioctl(_fd.get(), FIONREAD, &fsize) < 0, false);
+
+		if ((size_t)fsize > _size)
+		{
+			if (_raw) delete[] _raw;
+
+			_raw = new char[fsize];
+			AbortIfNot(_raw, false, "requested %d bytes", fsize);
+			_size = fsize;
+		}
+
+		_data.reset(_raw, fsize);
+
+		return true;
 	}
 
 	/**
