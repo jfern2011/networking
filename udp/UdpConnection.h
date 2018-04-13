@@ -96,7 +96,7 @@ namespace net
 			struct sockaddr_in& addr) const;
 
 		/**
-		 * The DataBuffer emitted on each \ref poll()
+		 * The DataBuffer emitted on each \ref recv()
 		 */
 		DataBuffer _data;
 
