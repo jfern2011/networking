@@ -43,7 +43,9 @@ namespace net
 	 *
 	 * @note Only works with basic C++ types
 	 *
-	 * @param[in,out] data Convert this data element
+	 * @param[in] data Convert this value
+	 *
+	 * @return The data element, in network byte order
 	 */
 	template <typename T>
 	inline T to_network_order(T data)
