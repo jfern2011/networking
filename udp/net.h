@@ -1,3 +1,11 @@
+/**
+ *  \file   net.h
+ *  \author Jason Fernandez
+ *  \date   4/11/2018
+ *
+ *  https://github.com/jfern2011/io_tools
+ */
+
 #ifndef __NET_H__
 #define __NET_H__
 
