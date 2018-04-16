@@ -39,16 +39,16 @@ namespace net
 	}
 
 	/**
-	 * Convert a given data element to network byte order
+	 * Convert a given data element from network to host byte order
 	 *
 	 * @note Only works with basic C++ types
 	 *
 	 * @param[in] data Convert this value
 	 *
-	 * @return The data element, in network byte order
+	 * @return The data element, in host byte order
 	 */
 	template <typename T>
-	inline T to_network_order(T data)
+	inline T from_network_order(T data)
 	{
 		if (!is_big_endian())
 		{
@@ -66,6 +66,21 @@ namespace net
 		}
 
 		return data;
+	}
+
+	/**
+	 * Convert a given data element to network byte order
+	 *
+	 * @note Only works with basic C++ types
+	 *
+	 * @param[in] data Convert this value
+	 *
+	 * @return The data element, in network byte order
+	 */
+	template <typename T>
+	inline T to_network_order(T data)
+	{
+		return from_network_order(data);
 	}
 }
 
