@@ -48,7 +48,7 @@ namespace net
 	 * @return The data element, in host byte order
 	 */
 	template <typename T>
-	inline T from_network_order(T data)
+	inline T to_host_order(T data)
 	{
 		if (!is_big_endian())
 		{
@@ -80,7 +80,7 @@ namespace net
 	template <typename T>
 	inline T to_network_order(T data)
 	{
-		return from_network_order(data);
+		return to_host_order(data);
 	}
 }
 
