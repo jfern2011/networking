@@ -46,22 +46,24 @@ namespace net
 	 * @param[in,out] data Convert this data element
 	 */
 	template <typename T>
-	inline void to_network_order(T& data)
+	inline T to_network_order(T data)
 	{
 		if (!is_big_endian())
 		{
-			auto swap = [] (char a, char b) {
+			auto swap = [] (char& a, char& b) {
 				a ^= b;
 				b ^= a;
 				a ^= b;
 			};
 
-			char* cp = &data;
+			char* cp = reinterpret_cast<char*>(&data);
 			const int N = sizeof(T);
 
 			for (int i = 0; i < N / 2; i++)
 				swap(cp[i], cp[N-i-1]);
 		}
+
+		return data;
 	}
 }
 
