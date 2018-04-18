@@ -44,6 +44,8 @@ namespace net
 
 		const char* get() const;
 
+		char& operator[](size_t index);
+
 		char operator[](size_t index) const;
 
 		void reset(char* buf, size_t size);

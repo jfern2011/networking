@@ -87,14 +87,24 @@ namespace net
 	 *
 	 * @param[in] index Get the byte at this index
 	 *
-	 * @return The byte at index \a index, or 0xFF if the desired
-	 *         index is out of range
+	 * @return A reference to the byte at index \a index
+	 */
+	char& DataBuffer::operator[](size_t index)
+	{
+		AbortIfNot(index < _size, _buf[index]);
+		return _buf[index];
+	}
+
+	/**
+	 * Indexing operator
+	 *
+	 * @param[in] index Get the byte at this index
+	 *
+	 * @return The byte at index \a index
 	 */
 	char DataBuffer::operator[](size_t index) const
 	{
-		AbortIfNot(index < _size, 0xFF);
-		AbortIfNot(_buf, false);
-
+		AbortIfNot(index < _size, _buf[index]);
 		return _buf[index];
 	}
 
