@@ -13,57 +13,12 @@
 #include <string>
 #include <arpa/inet.h>
 
+#include "DataBuffer.h"
 #include "Fd.h"
 
 namespace net
 {
 	using uint16 = std::uint16_t;
-
-	/**
-	 * A convenience class for handling a fixed-size buffer by
-	 * wrapping a pointer, size pair into a single class.
-	 * Note that this class does not manage the buffer at all,
-	 * e.g. no dynamic memory operations are performed
-	 */
-	class DataBuffer
-	{
-
-	public:
-
-		DataBuffer();
-
-		DataBuffer(char* buf, size_t size);
-
-		~DataBuffer();
-
-		explicit operator bool() const;
-
-		void clear();
-
-		char* get();
-
-		const char* get() const;
-
-		char& operator[](size_t index);
-
-		char operator[](size_t index) const;
-
-		void reset(char* buf, size_t size);
-
-		size_t size() const;
-
-	private:
-
-		/**
-		 * The internal data buffer
-		 */
-		char* _buf;
-
-		/**
-		 * The buffer size (bytes)
-		 */
-		size_t _size;
-	};
 
 	/**
 	 * Manages an IPv4 UDP connection. The underlying socket is
@@ -98,12 +53,14 @@ namespace net
 			struct sockaddr_in& addr) const;
 
 		/**
-		 * The DataBuffer emitted on each \ref recv()
+		 * The DataBuffer emitted on each \ref
+		 * recv()
 		 */
 		DataBuffer _data;
 
 		/**
-		 * The file descriptor to send and receive on
+		 * The file descriptor to send and
+		 * receive on
 		 */
 		Fd _fd;
 
@@ -118,7 +75,7 @@ namespace net
 		bool _is_init;
 
 		/**
-		 * The raw data read in from the socket
+		 * The raw data read from the socket
 		 */
 		char* _raw;
 
@@ -128,8 +85,8 @@ namespace net
 		size_t _size;
 
 		/**
-		 * The remote node address; applies only 
-		 * to connected sockets
+		 * The remote node address; applies to
+		 * connected sockets only
 		 */
 		struct sockaddr_in
 			_remote_addr;
