@@ -9,6 +9,7 @@
 #ifndef __NET_H__
 #define __NET_H__
 
+#include <netinet/in.h>
 #include <sys/socket.h>
 
 namespace net

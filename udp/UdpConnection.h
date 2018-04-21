@@ -11,8 +11,8 @@
 
 #include <cstdint>
 #include <string>
-#include <arpa/inet.h>
 
+#include "net.h"
 #include "DataBuffer.h"
 #include "Fd.h"
 

@@ -6,6 +6,7 @@
  *  https://github.com/jfern2011/io_tools
  */
 
+#include <arpa/inet.h>
 #include <cstring>
 #include <netdb.h>
 #include <sys/ioctl.h>
@@ -13,7 +14,6 @@
 
 #include "abort.h"
 #include "UdpConnection.h"
-#include "net.h"
 
 namespace net
 {
