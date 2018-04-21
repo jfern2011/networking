@@ -179,7 +179,11 @@ bool Fd::reset(int fd)
 }
 
 /**
- * Set the file descriptor blocking mode
+ * Set the file descriptor blocking mode. This may even be done
+ * when the currently handled file descriptor is invalid; in
+ * this case the next file descriptor acquired (e.g. via a call
+ * to \ref reset()) will automatically have its blocking mode
+ * set to \a val
  *
  * @param[in] val If true, enable blocking behavior
  *
@@ -187,18 +191,21 @@ bool Fd::reset(int fd)
  */
 bool Fd::set_blocking(bool val)
 {
-	int flags = ::fcntl(_fd, F_GETFL, 0);
-	if (flags < 0) return false;
+	if (*this)
+	{
+		int flags = ::fcntl(_fd, F_GETFL, 0);
+		if (flags < 0) return false;
 
-	if (!val)
-	{
-		if (::fcntl(_fd, F_SETFL, flags |   O_NONBLOCK ) < 0)
-			return false;
-	}
-	else
-	{
-		if (::fcntl(_fd, F_SETFL, flags & (~O_NONBLOCK)) < 0)
-			return false;
+		if (!val)
+		{
+			if (::fcntl(_fd, F_SETFL, flags |   O_NONBLOCK ) < 0)
+				return false;
+		}
+		else
+		{
+			if (::fcntl(_fd, F_SETFL, flags & (~O_NONBLOCK)) < 0)
+				return false;
+		}
 	}
 
 	_is_blocking = val;
