@@ -14,6 +14,7 @@
 
 #include "net.h"
 #include "DataBuffer.h"
+#include "ConstDataBuffer.h"
 #include "Fd.h"
 
 namespace net
@@ -44,6 +45,8 @@ namespace net
 		bool recv(DataBuffer& buf, int timeout = -1, bool conn = false);
 
 		int send(const DataBuffer& buf, int timeout = -1) const;
+
+		int send(const ConstDataBuffer& buf, int timeout = -1) const;
 
 	private:
 

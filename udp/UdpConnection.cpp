@@ -146,6 +146,26 @@ namespace net
 	 */
 	int UdpConnection::send(const DataBuffer& buf, int timeout) const
 	{
+		ConstDataBuffer const_buf(buf.get(), buf.size());
+		int nbytes = send(const_buf, timeout);
+
+		AbortIf(nbytes < 0, -1);
+		return nbytes;
+	}
+
+	/**
+	 * Send data to a remote node
+	 *
+	 * @param[in] buf     The buffer containing the data to send
+	 * @param[in] size    Write this many bytes
+	 * @param[in] timeout The maximum number of milliseconds to wait
+	 *                    for space to become available for writing;
+	 *                    specifying -1 may block indefinitely
+	 *
+	 * @return The number of bytes written, or -1 on error
+	 */
+	int UdpConnection::send(const ConstDataBuffer& buf, int timeout) const
+	{
 		AbortIfNot(_is_init, -1);
 		AbortIfNot(buf, -1);
 		AbortIfNot(_is_connected, -1,
@@ -155,7 +175,7 @@ namespace net
 			return 0;
 
 		int nbytes  = ::write(_fd.get(), buf.get(), buf.size());
-		AbortIf(nbytes < 0, false);
+		AbortIf(nbytes < 0, -1);
 
 		return nbytes;
 	}

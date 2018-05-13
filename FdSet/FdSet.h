@@ -108,7 +108,7 @@ private:
 	bool _poll(int timeout, short ev);
 
 	/**
-	 * The return value of ::epoll_create()
+	 * The value returned by ::epoll_create()
 	 */
 	int _epfd;
 
