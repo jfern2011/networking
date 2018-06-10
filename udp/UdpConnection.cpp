@@ -137,7 +137,6 @@ namespace net
 	 * Send data to a remote node
 	 *
 	 * @param[in] buf     The buffer containing the data to send
-	 * @param[in] size    Write this many bytes
 	 * @param[in] timeout The maximum number of milliseconds to wait
 	 *                    for space to become available for writing;
 	 *                    specifying -1 may block indefinitely
@@ -157,7 +156,6 @@ namespace net
 	 * Send data to a remote node
 	 *
 	 * @param[in] buf     The buffer containing the data to send
-	 * @param[in] size    Write this many bytes
 	 * @param[in] timeout The maximum number of milliseconds to wait
 	 *                    for space to become available for writing;
 	 *                    specifying -1 may block indefinitely
