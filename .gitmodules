@@ -4,3 +4,10 @@
 [submodule "abort"]
 	path = abort
 	url = https://github.com/jfern2011/abort.git
+
+[submodule "cpplint"]
+	path = cpplint
+	url = https://github.com/cpplint/cpplint
+[submodule "googletest"]
+	path = googletest
+	url = https://github.com/google/googletest
