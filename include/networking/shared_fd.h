@@ -48,9 +48,9 @@ public:
 
     explicit operator bool() const noexcept override;
 
-	int get() const noexcept override;
+    int get() const noexcept override;
 
-	bool is_blocking() const noexcept override;
+    bool is_blocking() const noexcept override;
 
     int poll(short events) noexcept override;
 
@@ -62,9 +62,9 @@ public:
     int poll(short events, int timeout,
              fd_interface::event_handler_t handler) override;
 
-	bool reset(int fd) noexcept override;
+    bool reset(int fd) noexcept override;
 
-	bool set_blocking(bool enable) noexcept override;
+    bool set_blocking(bool enable) noexcept override;
 
     void swap(shared_fd& fd) noexcept;
 
