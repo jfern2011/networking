@@ -6,11 +6,11 @@
  *  https://github.com/jfern2011/networking
  */
 
-#include "shared_fd.h"
+#include "networking/shared_fd.h"
 
 #include <utility>
 
-#include "file_descriptor.h"
+#include "networking/file_descriptor.h"
 
 namespace jfern {
 /**

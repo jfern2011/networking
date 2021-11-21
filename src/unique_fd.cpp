@@ -6,11 +6,11 @@
  *  https://github.com/jfern2011/networking
  */
 
-#include "unique_fd.h"
+#include "networking/unique_fd.h"
 
 #include <utility>
 
-#include "file_descriptor.h"
+#include "networking/file_descriptor.h"
 
 namespace jfern {
 /**
@@ -154,7 +154,7 @@ bool unique_fd::set_blocking(bool enable) noexcept {
  *
  * @param[in,out] fd The \ref unique_fd to swap with
  */
-void unique_fd::swap(unique_fd& fd) {
+void unique_fd::swap(unique_fd& fd) noexcept {
     const int temp_fd = m_fd;
     const bool temp_blocking = m_blocking;
 
