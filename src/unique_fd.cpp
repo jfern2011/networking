@@ -33,14 +33,14 @@ unique_fd::unique_fd(int fd) : m_blocking(false), m_fd(fd) {
  * @param[in] fd The file descriptor to take ownership of
  */
 unique_fd::unique_fd(unique_fd&& fd) {
-	*this = std::move(fd);
+    *this = std::move(fd);
 }
 
 /**
  * Destructor
  */
 unique_fd::~unique_fd() {
-	if (*this) file_descriptor::close(m_fd);
+    if (*this) file_descriptor::close(m_fd);
     m_fd = -1;
 }
 
@@ -54,20 +54,20 @@ unique_fd::~unique_fd() {
  * @return *this
  */
 unique_fd& unique_fd::operator=(unique_fd&& fd) {
-	if (this != &fd) {
-		m_blocking = fd.m_blocking;
+    if (this != &fd) {
+        m_blocking = fd.m_blocking;
 
         m_fd = fd.m_fd; fd.m_fd = -1;
-	}
+    }
 
-	return *this;
+    return *this;
 }
 
 /**
  * @see See fd_interface::operator bool()
  */
 unique_fd::operator bool() const noexcept {
-	return 0 <= m_fd;
+    return 0 <= m_fd;
 }
 
 /**
@@ -127,17 +127,17 @@ int unique_fd::poll(short events, int timeout,
  * @return The file descriptor we were managing
  */
 int unique_fd::release() {
-	const int fd = m_fd; m_fd = -1;
+    const int fd = m_fd; m_fd = -1;
 
-	return fd;
+    return fd;
 }
 
 /**
  * @see See fd_interface::reset()
  */
 bool unique_fd::reset(int fd) noexcept {
-	if (*this) file_descriptor::close(m_fd);
-	m_fd = fd;
+    if (*this) file_descriptor::close(m_fd);
+    m_fd = fd;
 
     return file_descriptor::set_blocking(m_fd, m_blocking);
 }
@@ -155,14 +155,14 @@ bool unique_fd::set_blocking(bool enable) noexcept {
  * @param[in,out] fd The \ref unique_fd to swap with
  */
 void unique_fd::swap(unique_fd& fd) {
-	const int temp_fd = m_fd;
+    const int temp_fd = m_fd;
     const bool temp_blocking = m_blocking;
 
     m_blocking = fd.m_blocking;
-	m_fd = fd.m_fd;
+    m_fd = fd.m_fd;
 
     fd.m_blocking = temp_blocking;
-	fd.m_fd = temp_fd;
+    fd.m_fd = temp_fd;
 }
 
 }  // namespace jfern

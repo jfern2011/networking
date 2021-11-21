@@ -38,14 +38,14 @@ public:
      * 
      * @return The file descriptor, or -1 if not assigned
      */
-	virtual int get() const noexcept = 0;
+    virtual int get() const noexcept = 0;
 
     /**
      * Check if blocking behavior is enabled on this file descriptor
      * 
      * @return True if this file descriptor is blocking
      */
-	virtual bool is_blocking() const noexcept = 0;
+    virtual bool is_blocking() const noexcept = 0;
 
     /**
      * Poll for file descriptor events
@@ -110,7 +110,7 @@ public:
      *
      * @return True on success
      */
-	virtual bool reset(int fd) noexcept = 0;
+    virtual bool reset(int fd) noexcept = 0;
 
     /**
      * Enable blocking behavior on this file descriptor
@@ -119,7 +119,7 @@ public:
      * 
      * @return True on success. Otherwise, errno will be set
      */
-	virtual bool set_blocking(bool enable) noexcept = 0;
+    virtual bool set_blocking(bool enable) noexcept = 0;
 };
 
 }  // namespace jfern
