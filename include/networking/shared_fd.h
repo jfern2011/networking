@@ -14,6 +14,7 @@
 #include <mutex>
 
 #include "fd_interface.h"
+#include "fd_internal.h"
 
 namespace jfern {
 /**
@@ -30,7 +31,7 @@ namespace jfern {
  * even when shared across multiple threads
  *
  * @note
- * For the purposes of concurrency, all operations on a shared_fd (including
+ * For the purposes of concurrency - all operations on a shared_fd (including
  * the use of any of the polling interfaces) may be treated as atomic
  */
 class shared_fd final : public fd_interface {
@@ -71,35 +72,6 @@ public:
     std::size_t use_count() const noexcept;
 
 private:
-    /**
-     * Maintains data shared between all owners of the file descriptor,
-     * including owners in other threads
-     */
-    class shared_info final {
-    public:
-        explicit shared_info(int fd);
-
-        std::size_t count() const;
-
-        int get() const;
-
-        void add_reference();
-        bool release();
-
-        /**
-         * Used to prevent simultaneous POSIX calls on the same file
-         * descriptor
-         */
-        std::mutex m_mutex;
-    
-    private:
-        /** The reference count */
-        std::atomic<std::size_t> m_count;
-
-        /** The actual file descriptor */
-        int m_fd;
-    };
-
     void drop_reference();
 
     /** True if blocking behavior is enabled */
@@ -108,7 +80,7 @@ private:
     /**
      * Data shared between owners of the file descriptor
      */
-    shared_info* m_shared_info;
+    fd::shared_internal* m_shared_info;
 };
 
 }  // namespace jfern

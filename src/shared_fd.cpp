@@ -26,7 +26,7 @@ shared_fd::shared_fd()
  * @param fd The file descriptor to manage
  */
 shared_fd::shared_fd(int fd)
-    : m_blocking(false), m_shared_info(new shared_info(fd)) {
+    : m_blocking(false), m_shared_info(new fd::shared_internal(fd)) {
 }
 
 /**
@@ -171,7 +171,7 @@ bool shared_fd::reset(int fd) noexcept {
 
     drop_reference();
 
-    m_shared_info = new shared_info(fd);
+    m_shared_info = new fd::shared_internal(fd);
     return m_shared_info;
 }
 
@@ -195,7 +195,7 @@ bool shared_fd::set_blocking(bool enable) noexcept {
 void shared_fd::swap(shared_fd& fd) noexcept {
     if (this != &fd) {
         const bool my_blocking = m_blocking;
-        shared_info* my_shared_info = m_shared_info;
+        fd::shared_internal* my_shared_info = m_shared_info;
 
         m_blocking = fd.m_blocking;
         m_shared_info = fd.m_shared_info;
@@ -229,51 +229,4 @@ void shared_fd::drop_reference() {
     }
 }
 
-/**
- * @brief Constructor
- *
- * @param[in] fd The file descriptor to manage
- */
-shared_fd::shared_info::shared_info(int fd)
-    : m_mutex(), m_count(1), m_fd(fd) {
-}
-
-/**
- * @brief Get the current reference count
- *
- * @return The reference count
- */
-std::size_t shared_fd::shared_info::count() const {
-    return m_count.load(std::memory_order_relaxed);
-}
-
-/**
- * @brief Get the internally held file descriptor
- *
- * @return The file descriptor
- */
-int shared_fd::shared_info::get() const {
-    return m_fd;
-}
-
-/**
- * @brief Increment the reference count
- */
-void shared_fd::shared_info::add_reference() {
-    m_count.fetch_add(1, std::memory_order_relaxed);
-}
-
-/**
- * @brief Decrement the reference count
- *
- * @return True if all references have been dropped
- */
-bool shared_fd::shared_info::release() {
-    if (m_count.fetch_sub(1, std::memory_order_relaxed) == 1) {
-        file_descriptor::close(m_fd);
-        // No point in checking for any close() errors
-        return true;
-    }
-    return false;
-}
 }  // namespace jfern
