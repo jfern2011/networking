@@ -7,6 +7,7 @@
  */
 
 #include "networking/file_descriptor.h"
+#include "networking/posix_api.h"
 
 #include <fcntl.h>
 #include <poll.h>
@@ -22,7 +23,7 @@ namespace file_descriptor {
  * @return True on success. On error, errno is set
  */
 bool close(int fd) noexcept {
-    return ::close(fd) == 0;
+    return posix_close(fd) == 0;
 }
 
 /**
@@ -38,7 +39,7 @@ int poll(int fd, short events, int timeout) noexcept {
     struct ::pollfd pfd; pfd.events = events;
     pfd.fd = fd;
 
-    const int res = ::poll(&pfd, 1, timeout);
+    const int res = posix_poll(&pfd, 1, timeout);
     if (res < 0) return -1;
     if (res > 0) return pfd.revents;
 
@@ -54,14 +55,14 @@ int poll(int fd, short events, int timeout) noexcept {
  * @return True on success. On error, errno is set
  */
 bool set_blocking(int fd, bool enable) noexcept {
-    const int flags = ::fcntl(fd, F_GETFL, 0);
+    const int flags = posix_fcntl(fd, F_GETFL, 0);
     if (flags < 0) return false;
 
     if (!enable) {
-        if (::fcntl(fd, F_SETFL, flags |  (O_NONBLOCK)) < 0)
+        if (posix_fcntl(fd, F_SETFL, flags |  (O_NONBLOCK)) < 0)
             return false;
     } else {
-        if (::fcntl(fd, F_SETFL, flags & (~O_NONBLOCK)) < 0)
+        if (posix_fcntl(fd, F_SETFL, flags & (~O_NONBLOCK)) < 0)
             return false;
     }
 

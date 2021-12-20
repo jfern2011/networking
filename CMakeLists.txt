@@ -18,6 +18,7 @@ FetchContent_MakeAvailable(googletest)
 # -----------------------------------------------------------------------------
 add_library(networking STATIC
     src/file_descriptor.cpp
+    src/posix_api.cpp
     src/shared_fd.cpp
     src/unique_fd.cpp
 )
