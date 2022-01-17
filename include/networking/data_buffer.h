@@ -200,7 +200,8 @@ input_buffer<N>::input_buffer() : data_buffer() {
 }
 
 /**
- * Read an element from the data buffer and advance the buffer pointer
+ * Read an element from the data buffer and advance the buffer pointer by
+ * the number of bytes read (i.e. the size of the element)
  *
  * @param data  The data element that was read
  * @param bswap If true, byte swap \a data before returning
@@ -222,13 +223,13 @@ bool input_buffer<N>::read(T* data, bool bswap) noexcept {
 }
 
 /**
- * @brief Read bytes from the data buffer and advance the buffer pointer
+ * Read from the data buffer and advance the buffer pointer by the number
+ * of bytes read
  *
  * @param data   The buffer to read into
  * @param nbytes The number of bytes to read
  *
- * @return True on success, or false if attempting to read past the end
- *         of the buffer
+ * @return True on success, or false if reading would overrun the buffer
  */
 template <std::size_t N>
 bool input_buffer<N>::read(std::uint8_t* data, std::size_t nbytes) noexcept {
@@ -249,7 +250,8 @@ output_buffer<N>::output_buffer() : data_buffer() {
 }
 
 /**
- * Write an element to the data buffer and advance the buffer pointer
+ * Write an element to the data buffer and advance the buffer pointer by
+ * the number of bytes written (i.e. the size of the element)
  *
  * @param data  The data element to write
  * @param bswap If true, byte swap \a data before writing
@@ -271,13 +273,13 @@ bool output_buffer<N>::write(const T& data, bool bswap) noexcept {
 }
 
 /**
- * @brief Write bytes to the data buffer and advance the buffer pointer
+ * Write to the data buffer and advance the buffer pointer by the number
+ * of bytes written
  *
  * @param data   The buffer to write into
  * @param nbytes The number of bytes to write
  *
- * @return True on success, or false if attempting to write past the end
- *         of the buffer
+ * @return True on success, or false if writing would overrun the buffer
  */
 template <size_t N>
 bool output_buffer<N>::write(const std::uint8_t* data,
