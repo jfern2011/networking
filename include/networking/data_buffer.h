@@ -5,90 +5,108 @@
  *
  *  Copyright 2021 Jason Fernandez
  *
- *  https://github.com/jfern2011/io_tools
+ *  https://github.com/jfern2011/networking
  */
 
-#ifndef DATA_BUFFER_H_
-#define DATA_BUFFER_H_
+#ifndef NETWORKING_DATA_BUFFER_H_
+#define NETWORKING_DATA_BUFFER_H_
 
 #include <array>
 #include <cstddef>
 #include <cstdint>
+#include <cstring>
 
-#include "jfern/net.h"
+#include "networking/net.h"
 
 namespace jfern {
 /**
  * Implements a fixed-size buffer
  * 
- * @details A DataBuffer encapsulates a contiguous sequence of bytes which can
- *          be operated on using file stream semantics. Data can be written to
- *          or read from the buffer with the desired endianness. An internal
+ * @details A data_buffer encapsulates a contiguous sequence of bytes which can
+ *          be operated on using file stream semantics. Data can be written
+ *          to or read from the buffer with the desired endianness. An internal
  *          pointer keeps track of the current buffer offset, enabling
  *          operations such as seek(), rewind(), and tell()
  * 
  * @tparam N The size of the buffer in bytes
  */
 template <std::size_t N>
-class DataBuffer final {
+class data_buffer {
 public:
-    explicit DataBuffer(bool big_endian);
+    data_buffer();
 
-    DataBuffer(const DataBuffer& buffer)            = default;
-    DataBuffer(DataBuffer&& buffer)                 = default;
-    DataBuffer& operator=(const DataBuffer& buffer) = default;
-    DataBuffer& operator=(DataBuffer&& buffer)      = default;
+    data_buffer(const data_buffer& buffer)            = default;
+    data_buffer(data_buffer&& buffer)                 = default;
+    data_buffer& operator=(const data_buffer& buffer) = default;
+    data_buffer& operator=(data_buffer&& buffer)      = default;
 
-    ~DataBuffer() = default;
+    virtual ~data_buffer() = 0;
 
-    const std::uint8_t* Data() const noexcept;
+    const std::uint8_t* data() const noexcept;
 
-    void Rewind()  noexcept;
+    void rewind() noexcept;
 
-    bool Seek(long int delta) noexcept;
+    bool seek(long int delta) noexcept;
 
-    bool SeekAbsolute(std::size_t new_offset) noexcept;
+    bool seek_absolute(std::size_t new_offset) noexcept;
 
-    std::size_t Size() const noexcept;
+    std::size_t size() const noexcept;
 
-    std::size_t Tell() const noexcept;
+    std::size_t tell() const noexcept;
 
-    template <typename T>
-    bool Read(T* data) noexcept;
-
-    template <typename T>
-    bool Write(const T& data) noexcept;
-
-    bool Read(std::uint8_t* data, std::size_t nbytes) noexcept;
-
-    bool Write(const std::uint8_t* data, std::size_t nbytes) noexcept;
-
-private:
+protected:
     /**
      * The underlying buffer
      */
-    std::array<std::uint8_t, N> buf_;
-
-    /**
-     * True if this is a big-endian system
-     */
-    bool big_endian_;
+    std::array<std::uint8_t, N> m_buf;
 
     /**
      * The current buffer offset, in bytes
      */
-    std::size_t offset_;
+    std::size_t m_offset;
+};
+
+template <std::size_t N>
+class input_buffer final : public data_buffer<N> {
+public:
+    input_buffer();
+
+    input_buffer(const input_buffer& buffer)            = default;
+    input_buffer(input_buffer&& buffer)                 = default;
+    input_buffer& operator=(const input_buffer& buffer) = default;
+    input_buffer& operator=(input_buffer&& buffer)      = default;
+
+    ~input_buffer() = default;
+
+    template <typename T>
+    bool read(T* data, bool bswap) noexcept;
+
+    bool read(std::uint8_t* data, std::size_t nbytes) noexcept;
+};
+
+template <std::size_t N>
+class output_buffer final : public data_buffer<N> {
+public:
+    output_buffer();
+
+    output_buffer(const output_buffer& buffer)            = default;
+    output_buffer(output_buffer&& buffer)                 = default;
+    output_buffer& operator=(const output_buffer& buffer) = default;
+    output_buffer& operator=(output_buffer&& buffer)      = default;
+
+    ~output_buffer() = default;
+
+    template <typename T>
+    bool write(const T& data, bool bswap) noexcept;
+
+    bool write(const std::uint8_t* data, std::size_t nbytes) noexcept;
 };
 
 /**
  * Constructor
- *
- * @param[in] big_endian If true, data in the underlying buffer is in big
- *                       endian format
  */
 template <std::size_t N>
-DataBuffer<N>::DataBuffer(bool big_endian)
-    : big_endian_(big_endian), offset_(0) {
+data_buffer<N>::data_buffer() : m_buf(), m_offset(0) {
 }
 
 /**
@@ -97,8 +115,8 @@ DataBuffer<N>::DataBuffer(bool big_endian)
  * @return A pointer to the underlying storage
  */
 template <std::size_t N>
-const std::uint8_t* DataBuffer<N>::Data() const noexcept {
-    return buf_.data();
+const std::uint8_t* data_buffer<N>::data() const noexcept {
+    return m_buf.data();
 }
 
 /**
@@ -106,8 +124,8 @@ const std::uint8_t* DataBuffer<N>::Data() const noexcept {
  * buffer
  */
 template <std::size_t N>
-void DataBuffer<N>::Rewind() noexcept {
-    offset_ = 0;
+void data_buffer<N>::rewind() noexcept {
+    m_offset = 0;
 }
 
 /**
@@ -122,17 +140,16 @@ void DataBuffer<N>::Rewind() noexcept {
  * @return True if the desired location is within bounds
  */
 template <std::size_t N>
-bool DataBuffer<N>::Seek(long int delta) noexcept {
+bool data_buffer<N>::seek(long int delta) noexcept {
     if (delta < 0) {
         const auto udelta = static_cast<std::size_t>(-delta);
-        if (udelta > offset_) return false;
+        if (udelta > m_offset) return false;
     } else {
-        const auto udelta = static_cast<std::size_t>(delta);
-        if (udelta > N || offset_ + udelta > N)
-            return false;
+        const auto udelta = static_cast<std::size_t>( delta);
+        if (m_offset + udelta > N) return false;
     }
     
-    offset_ += delta;
+    m_offset += delta;
     return true;
 }
 
@@ -147,10 +164,10 @@ bool DataBuffer<N>::Seek(long int delta) noexcept {
  * @return True if the desired location is within bounds
  */
 template <std::size_t N>
-bool DataBuffer<N>::SeekAbsolute(std::size_t new_offset) noexcept {
+bool data_buffer<N>::seek_absolute(std::size_t new_offset) noexcept {
     if (new_offset > N) return false;
     
-    offset_ = new_offset;
+    m_offset = new_offset;
     return true;
 }
 
@@ -160,7 +177,7 @@ bool DataBuffer<N>::SeekAbsolute(std::size_t new_offset) noexcept {
  * @return The buffer size, in bytes
  */
 template <std::size_t N>
-std::size_t DataBuffer<N>::Size() const noexcept {
+std::size_t data_buffer<N>::size() const noexcept {
     return N;
 }
 
@@ -171,29 +188,109 @@ std::size_t DataBuffer<N>::Size() const noexcept {
  * @return The current buffer offset, in bytes
  */
 template <std::size_t N>
-std::size_t DataBuffer<N>::Tell() const noexcept {
-    return offset_;
+std::size_t data_buffer<N>::tell() const noexcept {
+    return m_offset;
 }
 
 /**
- * Read an element from the data buffer. If an endian swap is required,
+ * Constructor
  */
-template <typename T>
 template <std::size_t N>
-bool DataBuffer<N>::Read(T* data) {
-    const std::size_t new_pos = offset_ + sizeof(T);
-    if (new_pos > N) return false;
-
-    
+input_buffer<N>::input_buffer() : data_buffer() {
 }
 
+/**
+ * Read an element from the data buffer and advance the buffer pointer
+ *
+ * @param data  The data element that was read
+ * @param bswap If true, byte swap \a data before returning
+ *
+ * @return True on success, or false if reading would overrun the buffer
+ */
+template <std::size_t N>
 template <typename T>
-    bool Write(const T& data) noexcept;
+bool input_buffer<N>::read(T* data, bool bswap) noexcept {
+    const std::size_t new_pos = m_offset + sizeof(T);
+    if (new_pos > N) return false;
 
-    bool Read(std::uint8_t* data, std::size_t nbytes) noexcept;
+    std::memcpy(data, &m_buf[ m_offset ], sizeof(T));
 
-    bool Write(const std::uint8_t* data, std::size_t nbytes) noexcept;
+    if (bswap) *data = byte_swap<T>(*data);
+
+    m_offset = new_pos;
+    return true;
+}
+
+/**
+ * @brief Read bytes from the data buffer and advance the buffer pointer
+ *
+ * @param data   The buffer to read into
+ * @param nbytes The number of bytes to read
+ *
+ * @return True on success, or false if attempting to read past the end
+ *         of the buffer
+ */
+template <std::size_t N>
+bool input_buffer<N>::read(std::uint8_t* data, std::size_t nbytes) noexcept {
+    const std::size_t new_pos = m_offset + nbytes;
+    if (new_pos > N) return false;
+
+    std::memcpy(data, &m_buf[ m_offset ], nbytes);
+
+    m_offset = new_pos;
+    return true;
+}
+
+/**
+ * Constructor
+ */
+template <std::size_t N>
+output_buffer<N>::output_buffer() : data_buffer() {
+}
+
+/**
+ * Write an element to the data buffer and advance the buffer pointer
+ *
+ * @param data  The data element to write
+ * @param bswap If true, byte swap \a data before writing
+ *
+ * @return True on success, or false if writing would overrun the buffer
+ */
+template <std::size_t N>
+template <typename T>
+bool output_buffer<N>::write(const T& data, bool bswap) noexcept {
+    const std::size_t new_pos = m_offset + sizeof(T);
+    if (new_pos > N) return false;
+
+    T output = bswap ? byte_swap<T>(data) : data;
+
+    std::memcpy(&m_buf[m_offset], &output, sizeof(T));
+
+    m_offset = new_pos;
+    return true;
+}
+
+/**
+ * @brief Write bytes to the data buffer and advance the buffer pointer
+ *
+ * @param data   The buffer to write into
+ * @param nbytes The number of bytes to write
+ *
+ * @return True on success, or false if attempting to write past the end
+ *         of the buffer
+ */
+template <size_t N>
+bool output_buffer<N>::write(const std::uint8_t* data,
+                             std::size_t nbytes) noexcept {
+    const std::size_t new_pos = m_offset + nbytes;
+    if (new_pos > N) return false;
+
+    std::memcpy(&m_buf[ m_offset ], data, nbytes);
+
+    m_offset = new_pos;
+    return true;
+}
 
 }  // namespace jfern
 
-#endif  // DATA_BUFFER_H_
+#endif  // NETWORKING_DATA_BUFFER_H_
