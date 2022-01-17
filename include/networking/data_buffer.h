@@ -66,6 +66,9 @@ protected:
     std::size_t m_offset;
 };
 
+/**
+ * @brief A data_buffer which supports read operations
+ */
 template <std::size_t N>
 class input_buffer final : public data_buffer<N> {
 public:
@@ -84,6 +87,9 @@ public:
     bool read(std::uint8_t* data, std::size_t nbytes) noexcept;
 };
 
+/**
+ * @brief A data_buffer which supports write operations
+ */
 template <std::size_t N>
 class output_buffer final : public data_buffer<N> {
 public:
