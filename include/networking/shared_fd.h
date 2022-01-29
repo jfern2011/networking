@@ -72,8 +72,8 @@ public:
     std::size_t use_count() const noexcept;
 
 private:
-    // Give weak_ptr access to the control block
-    friend class weak_ptr;
+    // Give weak_fd access to the control block
+    friend class weak_fd;
 
     void drop_reference();
 
