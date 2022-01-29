@@ -72,11 +72,51 @@ public:
     std::size_t use_count() const noexcept;
 
 private:
+    // Give weak_ptr access to the control block
+    friend class weak_ptr;
+
     void drop_reference();
 
     /** True if blocking behavior is enabled */
     bool m_blocking;
 
+    /**
+     * Data shared between owners of the file descriptor
+     */
+    fd::shared_internal* m_shared_info;
+};
+
+/**
+ * @class weak_fd
+ *
+ * Manages a single file descriptor, employing semantics similar to
+ * std::weak_ptr
+ */
+class weak_fd final {
+public:
+    weak_fd();
+
+    explicit weak_fd(const shared_fd& fd);
+
+    weak_fd(const weak_fd& fd);
+    weak_fd(weak_fd&& fd);
+    weak_fd& operator=(const weak_fd& fd);
+    weak_fd& operator=(const shared_fd& fd);
+    weak_fd& operator=(weak_fd&& fd);
+
+    ~weak_fd();
+
+    bool expired() const noexcept;
+
+    shared_fd lock() const noexcept;
+
+	void reset() noexcept;
+
+    void swap(weak_fd& fd) noexcept;
+
+    std::size_t use_count() const noexcept;
+
+private:
     /**
      * Data shared between owners of the file descriptor
      */
