@@ -89,8 +89,8 @@ private:
 /**
  * @class weak_fd
  *
- * Manages a single file descriptor, employing semantics similar to
- * std::weak_ptr
+ * Provides access to a single file descriptor that is managed by a shared_fd
+ * object, employing semantics similar to std::weak_ptr
  */
 class weak_fd final {
 public:
