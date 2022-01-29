@@ -16,7 +16,7 @@ namespace jfern {
  * @class unique_fd
  *
  * Manages a single file descriptor, employing semantics similar to
- * std::unique_ptr. An unique_fd cannot be copied, but ownership of the file
+ * std::unique_ptr. A unique_fd cannot be copied, but ownership of the file
  * descriptor it manages can be transferred to another instance. The file
  * descriptor is closed once the owning instance is destroyed
  */
