@@ -320,9 +320,9 @@ weak_fd& weak_fd::operator=(const shared_fd& fd) {
 }
 
 /**
- * @brief Destructor. Drops the current reference and deletes
- *        the control block if this is the last weak reference and
- *        there are no owners still managing the file descriptor
+ * @brief Destructor. Drops the current reference and deletes the control block
+ *        if this is the last weak reference and there are no shared_fds still
+ *        managing the file descriptor
  */
 weak_fd::~weak_fd() {
     reset();
@@ -331,19 +331,19 @@ weak_fd::~weak_fd() {
 /**
  * @brief Check if *this references a valid file descriptor
  *
- * @return True if a file descriptor is currently being referenced and
- *         is valid (has not been closed)
+ * @return True if a file descriptor is currently being referenced and is valid
+ *         (has not been closed)
  */
 bool weak_fd::expired() const noexcept {
     return m_shared_info && m_shared_info->count() > 0u;
 }
 
 /**
- * @brief Create a new shared_fd which shares ownership of the file
- *        descriptor referenced by *this
+ * @brief Create a new shared_fd which shares ownership of the file descriptor
+ *        referenced by *this
  * 
- * @return A new shared_fd which manages the referenced file descriptor,
- *         or an empty shared_fd if the reference is invalid
+ * @return A new shared_fd which manages the referenced file descriptor, or an
+ *         empty shared_fd if the reference is invalid
  */
 shared_fd weak_fd::lock() const noexcept {
     if (m_shared_info) {
@@ -357,8 +357,8 @@ shared_fd weak_fd::lock() const noexcept {
 }
 
 /**
- * @brief Drops the reference to the currently held file descriptor
- *        if a reference is currently being held
+ * @brief Drops the reference to the currently held file descriptor if a
+ *        reference is currently being held
  */
 void weak_fd::reset() noexcept {
     if (m_shared_info) {
@@ -385,11 +385,11 @@ void weak_fd::swap(weak_fd& fd) noexcept {
 }
 
 /**
- * @brief Returns the number of shared_fds managing the referenced
- *        file descriptor
+ * @brief Returns the number of shared_fds managing the referenced file
+ *        descriptor
  * 
- * @return The number of file descriptor owners, or zero if *this
- *         does not reference a valid file descriptor
+ * @return The number of file descriptor owners, or zero if *this does not
+ *         reference a valid file descriptor
  */
 std::size_t weak_fd::use_count() const noexcept {
     if (m_shared_info) return m_shared_info->count();
