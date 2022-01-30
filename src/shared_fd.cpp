@@ -63,7 +63,9 @@ shared_fd& shared_fd::operator=(const shared_fd& fd) {
         m_shared_info = fd.m_shared_info;
 
         if (m_shared_info) {
-            m_shared_info->add_reference();
+            if (!m_shared_info->add_reference_if_valid()) {
+                m_shared_info = nullptr;
+            }
         }
     }
 
@@ -227,6 +229,167 @@ void shared_fd::drop_reference() {
 
         m_shared_info = nullptr;
     }
+}
+
+/**
+ * @brief Default constructor
+ */
+weak_fd::weak_fd() : m_shared_info(nullptr) {
+}
+
+/**
+ * @brief Constructor
+ *
+ * @param fd The shared_fd which manages the file descriptor
+ *           to obtain a weak reference to
+ */
+weak_fd::weak_fd(const shared_fd& fd)
+    : m_shared_info(fd.m_shared_info) {
+}
+
+/**
+ * @brief Copy constructor
+ *
+ * @param fd The weak_fd to create a copy of
+ */
+weak_fd::weak_fd(const weak_fd& fd) {
+    *this = fd;
+}
+
+/**
+ * @brief Move constructor
+ *
+ * @param fd The weak_fd which will be moved into *this
+ */
+weak_fd::weak_fd(weak_fd&& fd) {
+    *this = std::move(fd);
+}
+
+/**
+ * @brief Copy assignment operator
+ *
+ * @param fd The weak_fd to copy *this to
+ */
+weak_fd& weak_fd::operator=(const weak_fd& fd) {
+    if (this != &fd) {
+        // Drop the currently referenced file descriptor
+        reset();
+        m_shared_info = fd.m_shared_info;
+
+        if (m_shared_info) {
+            if (!m_shared_info->add_weak_reference_if_valid()) {
+                m_shared_info = nullptr;
+            }
+        }
+    }
+
+    return *this;
+}
+
+/**
+ * @brief Move assignment operator
+ *
+ * @param fd The weak_fd whose reference will be transferred to *this
+ *
+ * @return *this
+ */
+weak_fd& weak_fd::operator=(weak_fd&& fd) {
+    if (this != &fd) {
+        // Drop the currently referenced file descriptor
+        reset();
+        m_shared_info = fd.m_shared_info;
+
+        fd.m_shared_info = nullptr;
+    }
+
+    return *this;
+}
+
+/**
+ * @brief Assign *this to reference a new file descriptor
+ *
+ * @param fd The object currently managing the target file descriptor
+ */
+weak_fd& weak_fd::operator=(const shared_fd& fd) {
+    m_shared_info = fd.m_shared_info;
+    return *this;
+}
+
+/**
+ * @brief Destructor. Drops the current reference and deletes
+ *        the control block if this is the last weak reference and
+ *        there are no owners still managing the file descriptor
+ */
+weak_fd::~weak_fd() {
+    reset();
+}
+
+/**
+ * @brief Check if *this references a valid file descriptor
+ *
+ * @return True if a file descriptor is currently being referenced and
+ *         is valid (has not been closed)
+ */
+bool weak_fd::expired() const noexcept {
+    return m_shared_info && m_shared_info->count() > 0u;
+}
+
+/**
+ * @brief Create a new shared_fd which shares ownership of the file
+ *        descriptor referenced by *this
+ * 
+ * @return A new shared_fd which manages the referenced file descriptor,
+ *         or an empty shared_fd if the reference is invalid
+ */
+shared_fd weak_fd::lock() const noexcept {
+    if (m_shared_info) {
+        if (m_shared_info->add_reference_if_valid()) {
+            return shared_fd(m_shared_info->get());
+        }
+    }
+
+    // Return an empty object
+    return shared_fd();
+}
+
+/**
+ * @brief Drops the reference to the currently held file descriptor
+ *        if a reference is currently being held
+ */
+void weak_fd::reset() noexcept {
+    if (m_shared_info) {
+        if (m_shared_info->release_weak_reference()) {
+            delete m_shared_info;
+        }
+
+        m_shared_info = nullptr;
+    }
+}
+
+/**
+ * @brief Swap this object's data members with \a fd
+ * 
+ * @param fd The weak_fd to swap with
+ */
+void weak_fd::swap(weak_fd& fd) noexcept {
+    if (this != &fd) {
+        fd::shared_internal* my_shared_info = m_shared_info;
+
+        m_shared_info = fd.m_shared_info;
+        fd.m_shared_info = my_shared_info;
+    }
+}
+
+/**
+ * @brief Returns the number of shared_fds managing the referenced
+ *        file descriptor
+ * 
+ * @return The number of file descriptor owners, or zero if *this
+ *         does not reference a valid file descriptor
+ */
+std::size_t weak_fd::use_count() const noexcept {
+    if (m_shared_info) return m_shared_info->count();
+    return 0;
 }
 
 }  // namespace jfern

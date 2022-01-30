@@ -96,6 +96,24 @@ bool shared_internal::release() {
 void shared_internal::add_weak_reference() {
     m_weak_count.fetch_add(1, std::memory_order_relaxed);
 }
+/**
+ * @brief Increment the weak reference count only if its count
+ *        is non-zero
+ *
+ * @return True if the increment succeeded
+ */
+bool shared_internal::add_weak_reference_if_valid() {
+    std::size_t count
+        = m_weak_count.load(std::memory_order_relaxed);
+
+    for (;;) {
+        if (count == 0) return false;
+        if (m_weak_count.compare_exchange_weak(
+                count, count+1, std::memory_order_relaxed)) {
+            return true;
+        }
+    }
+}
 
 /**
  * @brief Decrement the weak reference count

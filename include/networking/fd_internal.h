@@ -42,6 +42,7 @@ public:
     bool release();
 
     void add_weak_reference();
+    bool add_weak_reference_if_valid();
     bool release_weak_reference();
 
     /**

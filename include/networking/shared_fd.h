@@ -90,7 +90,9 @@ private:
  * @class weak_fd
  *
  * Provides access to a single file descriptor that is managed by a shared_fd
- * object, employing semantics similar to std::weak_ptr
+ * object, employing semantics similar to std::weak_ptr. A weak_fd holds a
+ * reference to the file descriptor, which may be invalidated if the last owning
+ * instance is destructed or releases ownership of the file descriptor
  */
 class weak_fd final {
 public:
@@ -101,8 +103,8 @@ public:
     weak_fd(const weak_fd& fd);
     weak_fd(weak_fd&& fd);
     weak_fd& operator=(const weak_fd& fd);
-    weak_fd& operator=(const shared_fd& fd);
     weak_fd& operator=(weak_fd&& fd);
+    weak_fd& operator=(const shared_fd& fd);
 
     ~weak_fd();
 
