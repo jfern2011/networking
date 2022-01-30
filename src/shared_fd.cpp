@@ -240,8 +240,8 @@ weak_fd::weak_fd() : m_shared_info(nullptr) {
 /**
  * @brief Constructor
  *
- * @param fd The shared_fd which manages the file descriptor
- *           to obtain a weak reference to
+ * @param fd The shared_fd which manages the file descriptor to obtain a weak
+ *           reference to
  */
 weak_fd::weak_fd(const shared_fd& fd)
     : m_shared_info(fd.m_shared_info) {
