@@ -269,6 +269,8 @@ weak_fd::weak_fd(weak_fd&& fd) {
  * @brief Copy assignment operator
  *
  * @param fd The weak_fd to copy *this to
+ *
+ * @return *this
  */
 weak_fd& weak_fd::operator=(const weak_fd& fd) {
     if (this != &fd) {
@@ -309,6 +311,8 @@ weak_fd& weak_fd::operator=(weak_fd&& fd) {
  * @brief Assign *this to reference a new file descriptor
  *
  * @param fd The object currently managing the target file descriptor
+ *
+ * @return *this
  */
 weak_fd& weak_fd::operator=(const shared_fd& fd) {
     m_shared_info = fd.m_shared_info;

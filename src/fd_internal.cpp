@@ -97,7 +97,7 @@ void shared_internal::add_weak_reference() {
     m_weak_count.fetch_add(1, std::memory_order_relaxed);
 }
 /**
- * @brief Increment the weak reference count only if its count
+ * @brief Increment the weak reference count only if its value
  *        is non-zero
  *
  * @return True if the increment succeeded
