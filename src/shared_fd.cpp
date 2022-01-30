@@ -335,7 +335,7 @@ weak_fd::~weak_fd() {
  *         (has not been closed)
  */
 bool weak_fd::expired() const noexcept {
-    return m_shared_info && m_shared_info->count() > 0u;
+    return m_shared_info && m_shared_info->count() == 0u;
 }
 
 /**
