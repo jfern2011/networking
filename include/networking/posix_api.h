@@ -19,8 +19,8 @@ namespace jfern {
 int posix_close(int);
 template <typename... T> int posix_fcntl(int, int, T&&...);
 int posix_poll(struct pollfd[], nfds_t, int);
-ssize_t posix_read(int fd, std::uint8_t* buf, std::size_t nbytes);
-ssize_t posix_write(int fd, const std::uint8_t* buf, std::size_t nbytes);
+ssize_t posix_read(int, std::uint8_t*, std::size_t);
+ssize_t posix_write(int, const std::uint8_t*, std::size_t);
 
 }  // namespace jfern
 
