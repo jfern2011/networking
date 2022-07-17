@@ -44,7 +44,7 @@ struct byte_swap<T, 8u> {
 
 template <typename T, std::size_t I>
 constexpr T byte_swap<T, I>::calculate(const T& data) noexcept {
-    static_assert(false, "byte_swap: invalid size");
+    static_assert(I == 0, "byte_swap: invalid size");
 }
 
 /**
@@ -122,7 +122,7 @@ constexpr T byte_swap<T, 8u>::calculate(const T& data) noexcept {
  */
 template <typename T>
 constexpr T byte_swap(const T& data) noexcept {
-    return byte_swap<T, sizeof(T)>::calculate(data);
+    return internal::byte_swap<T, sizeof(T)>::calculate(data);
 }
 
 /**

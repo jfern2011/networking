@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.14)
 
 project(Networking VERSION 2.0)
 
-set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
 include(FetchContent)
@@ -33,16 +33,17 @@ PUBLIC
 # -----------------------------------------------------------------------------
 enable_testing()
 
-add_executable(shared_fd-test
+add_executable(networking-test
+    tests/net-ut.cpp
     tests/shared_fd-ut.cpp
     tests/main.cpp
 )
 
-target_link_libraries(shared_fd-test
+target_link_libraries(networking-test
 PRIVATE
     networking
     gtest_main
 )
 
 include(GoogleTest)
-gtest_discover_tests(shared_fd-test)
+gtest_discover_tests(networking-test)
