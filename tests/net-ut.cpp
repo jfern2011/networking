@@ -1,9 +1,22 @@
 #include <cstdint>
+#include <limits.h>
 
 #include "gtest/gtest.h"
 #include "networking/net.h"
 
 namespace {
+TEST(net, byte_swap_I8) {
+    for (std::int8_t i = std::numeric_limits<std::int8_t>::min();
+         i <= 0; i++) {
+        ASSERT_EQ(jfern::byte_swap(i), i);
+    }
+
+    for (std::int8_t i = std::numeric_limits<std::int8_t>::max();
+         i >= 0; i--) {
+        ASSERT_EQ(jfern::byte_swap(i), i);
+    }
+}
+
 TEST(net, byte_swap_I16) {
     std::int16_t valueI16 = 0xeedd;
 
@@ -68,6 +81,15 @@ TEST(net, byte_swap_I64) {
 
     valueI64 = 0;
     EXPECT_EQ(jfern::byte_swap(valueI64), valueI64);
+}
+
+TEST(net, byte_swap_U8) {
+    for (std::uint8_t i = std::numeric_limits<std::uint8_t>::max();
+         i >= 0; i--) {
+        ASSERT_EQ(jfern::byte_swap(i), i);
+
+        if (i == 0) break;
+    }
 }
 
 TEST(net, byte_swap_U16) {
