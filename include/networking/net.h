@@ -11,9 +11,108 @@
 #ifndef NETWORKING_NET_H_
 #define NETWORKING_NET_H_
 
+#include <cstddef>
 #include <cstdint>
+#include <type_traits>
 
 namespace jfern {
+namespace internal {
+template <typename T, std::size_t I>
+struct byte_swap {
+    static constexpr T calculate(const T& data) noexcept;
+};
+
+template <typename T>
+struct byte_swap<T, 1u> {
+    static constexpr T calculate(const T& data) noexcept;
+};
+
+template <typename T>
+struct byte_swap<T, 2u> {
+    static constexpr T calculate(const T& data) noexcept;
+};
+
+template <typename T>
+struct byte_swap<T, 4u> {
+    static constexpr T calculate(const T& data) noexcept;
+};
+
+template <typename T>
+struct byte_swap<T, 8u> {
+    static constexpr T calculate(const T& data) noexcept;
+};
+
+template <typename T, std::size_t I>
+constexpr T byte_swap<T, I>::calculate(const T& data) noexcept {
+    static_assert(false, "byte_swap: invalid size");
+}
+
+/**
+ * Reverse the bytes of a single-byte value
+ *
+ * @param[in] data The element whose bytes to reverse
+ *
+ * @return \a data with its bytes reversed
+ */
+template <typename T>
+constexpr T byte_swap<T, 1u>::calculate(const T& data) noexcept {
+    return data;
+}
+
+/**
+ * Reverse the bytes of a two-byte value
+ *
+ * @param[in] data The element whose bytes to reverse
+ *
+ * @return \a data with its bytes reversed
+ */
+template <typename T>
+constexpr T byte_swap<T, 2u>::calculate(const T& data) noexcept {
+    static_assert(std::is_integral<T>::value);
+    return ((data >> 8) & 0xff) | ((data << 8) & 0xff00);
+}
+
+/**
+ * Reverse the bytes of a four-byte value
+ *
+ * @param[in] data The element whose bytes to reverse
+ *
+ * @return \a data with its bytes reversed
+ */
+template <typename T>
+constexpr T byte_swap<T, 4u>::calculate(const T& data) noexcept {
+    static_assert(std::is_integral<T>::value);
+
+    T x(data);
+
+    x = (x & 0x0000ffff) << 16 | (x & 0xffff0000u) >> 16;
+    x = (x & 0x00ff00ff) << 8  | (x & 0xff00ff00u) >> 8;
+
+    return x;
+}
+
+/**
+ * Reverse the bytes of an eight-byte value
+ *
+ * @param[in] data The element whose bytes to reverse
+ *
+ * @return \a data with its bytes reversed
+ */
+template <typename T>
+constexpr T byte_swap<T, 8u>::calculate(const T& data) noexcept {
+    static_assert(std::is_integral<T>::value);
+
+    T x(data);
+
+    x = (x & 0x00000000ffffffff) << 32 | (x & 0xffffffff00000000u) >> 32;
+    x = (x & 0x0000ffff0000ffff) << 16 | (x & 0xffff0000ffff0000u) >> 16;
+    x = (x & 0x00ff00ff00ff00ff) << 8  | (x & 0xff00ff00ff00ff00u) >> 8;
+
+    return x;
+}
+
+}  // namespace internal
+
 /**
  * Reverse the bytes of a generic type
  *
@@ -23,19 +122,7 @@ namespace jfern {
  */
 template <typename T>
 constexpr T byte_swap(const T& data) noexcept {
-    T output(data);
-
-    constexpr unsigned int size = sizeof(T);
-    for (unsigned int i = 0; i < size / 2; i++) {
-        std::uint8_t* op1 = reinterpret_cast<std::uint8_t*>(&output[i]);
-        std::uint8_t* op2 = reinterpret_cast<std::uint8_t*>(&output[size-i-1]);
-
-        std::uint8_t temp = *op1;
-        *op1 = *op2;
-        *op2 = temp;
-    }
-
-    return output;
+    return byte_swap<T, sizeof(T)>::calculate(data);
 }
 
 /**
