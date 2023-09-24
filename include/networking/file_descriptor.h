@@ -9,8 +9,6 @@
 #ifndef NETWORKING_FILE_DESCRIPTOR_H_
 #define NETWORKING_FILE_DESCRIPTOR_H_
 
-#include "fd_interface.h"
-
 #include <mutex>
 
 namespace jfern {

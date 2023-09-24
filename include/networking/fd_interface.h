@@ -22,8 +22,6 @@ public:
      */
     using event_handler_t = std::function<void(short revents, fd_interface&)>;
 
-    fd_interface();
-
     virtual ~fd_interface() = default;
 
     /**
