@@ -53,7 +53,7 @@ bool fd_event_sink::add_events(short events,
 }
 
 /**
- * @brief Clear all events/event handler for this file descriptor
+ * @brief Clear all events/event handlers for this file descriptor
  */
 void fd_event_sink::clear_events() {
     m_events.clear();

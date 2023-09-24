@@ -15,7 +15,7 @@
 
 namespace {
 /**
- * Common file descriptor abstract interface
+ * Mock file descriptor API
  */
 class fd_interface_mock : public jfern::fd_interface {
 public:
