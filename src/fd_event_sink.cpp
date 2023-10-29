@@ -43,9 +43,7 @@ bool fd_event_sink::add_events(short events,
         event.mask ^= common_events;
     }
 
-    for (auto iter = m_events.begin(), end = m_events.end(); iter != end; ) {
-        iter = iter->mask == 0 ? m_events.erase(iter) : iter + 1;
-    }
+    erase_null_events();
 
     m_events.emplace_back(events, handler);
 
@@ -69,6 +67,32 @@ void fd_event_sink::handle_events(short events) {
         [&](const callback_info& event) {
             if (event.mask & events) event.handler(events, *m_fd);
         });
+}
+
+/**
+ * @brief Remove previously added events
+ *
+ * @param events Bitmask specifying which events to no longer check for
+ *
+ * @note No-op if no events in \a events were previously added 
+ */
+void fd_event_sink::remove_events(short events) {
+    for (auto& event : m_events) {
+        const short to_remove = event.mask & events;
+
+        event.mask ^= to_remove;
+    }
+
+    erase_null_events();
+}
+
+/**
+ * @brief Clean up events whose bitmask is zero
+ */
+void fd_event_sink::erase_null_events() {
+    for (auto iter = m_events.begin(), end = m_events.end(); iter != end; ) {
+        iter = iter->mask == 0 ? m_events.erase(iter) : iter + 1;
+    }
 }
 
 }  // namespace jfern

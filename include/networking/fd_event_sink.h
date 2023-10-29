@@ -37,7 +37,11 @@ public:
 
     void handle_events(short events);
 
+    void remove_events(short events);
+
 private:
+    void erase_null_events();
+
     /**
      * @brief Mapping from event(s) to event handler
      */
